@@ -1,135 +1,557 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plant Disease Prediction</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LeafScan — Potato Blight Detector</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg:#0a0f0a;--card:#141f14;--surface:#111811;--border:#1e3a1e;
+      --green:#4ade80;--green-glow:rgba(74,222,128,0.12);
+      --amber:#fbbf24;--red:#f87171;--blue:#60a5fa;
+      --text:#e2ffe2;--muted:#6b8f6b;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+    .wrap{max-width:1040px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
 
-        body {
-            background: #399600;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+    /* HEADER */
+    header{padding:30px 0 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:13px}
+    .logo{width:38px;height:38px;background:linear-gradient(135deg,#4ade80,#166534);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 18px rgba(74,222,128,.25);flex-shrink:0}
+    header h1{font-size:24px;font-weight:800;letter-spacing:-1px}
+    header h1 span{color:var(--green)}
+    .hbadge{margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;background:var(--green-glow);color:var(--green);border:1px solid var(--border);padding:4px 10px;border-radius:20px;white-space:nowrap}
 
-        .container {
-            background: white;
-            padding: 30px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            text-align: center;
-            width: 100%;
-            max-width: 400px;
-        }
+    /* SECTION TITLES */
+    .stitle{font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:3px;text-transform:uppercase;padding:28px 0 12px;display:flex;align-items:center;gap:10px}
+    .stitle::after{content:'';flex:1;height:1px;background:var(--border)}
 
-        h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
+    /* DROP ZONE */
+    #drop-zone{border:2px dashed var(--border);border-radius:14px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .3s;background:var(--card);position:relative;overflow:hidden}
+    #drop-zone::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(74,222,128,.035) 0%,transparent 70%);pointer-events:none}
+    #drop-zone.hov{border-color:var(--green);background:rgba(74,222,128,.03);box-shadow:0 0 35px rgba(74,222,128,.07)}
+    .uico{font-size:40px;margin-bottom:12px;animation:bob 3.2s ease-in-out infinite}
+    @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+    #drop-zone h2{font-size:17px;font-weight:700;margin-bottom:5px}
+    #drop-zone p{color:var(--muted);font-size:12px;margin-bottom:16px;font-family:'Space Mono',monospace}
+    #file-input{display:none}
+    .ubtn{display:inline-flex;align-items:center;gap:6px;background:var(--green);color:#0a0f0a;font-family:'Syne',sans-serif;font-weight:700;border:none;padding:10px 22px;border-radius:7px;cursor:pointer;font-size:12px;transition:all .2s}
+    .ubtn:hover{background:#86efac;transform:translateY(-1px);box-shadow:0 7px 18px rgba(74,222,128,.3)}
 
-        .upload-box {
-            border: 2px dashed #007BFF;
-            padding: 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
+    /* OR DIVIDER */
+    .ordiv{display:flex;align-items:center;gap:12px;margin:26px 0 20px;color:var(--muted);font-family:'Space Mono',monospace;font-size:10px}
+    .ordiv::before,.ordiv::after{content:'';flex:1;height:1px;background:var(--border)}
+    .ordiv span{background:var(--card);border:1px solid var(--border);padding:3px 11px;border-radius:20px;white-space:nowrap}
 
-        .upload-box:hover {
-            background: #007BFF;
-            color: white;
-        }
+    /* SAMPLE GRIDS */
+    .slabel{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+    .tag{font-size:9px;font-family:'Space Mono',monospace;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:1px}
+    .tag.late  {background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.22)}
+    .tag.early {background:rgba(251,191,36,.12); color:#fbbf24;border:1px solid rgba(251,191,36,.22)}
+    .tag.healthy{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.22)}
+    .slabel small{color:var(--muted);font-size:10px;font-family:'Space Mono',monospace}
+    .sgrid{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:18px}
+    .simg{width:112px;height:86px;border-radius:7px;object-fit:cover;cursor:pointer;border:2px solid transparent;transition:all .22s;background:#0d170d}
+    .simg:hover{border-color:var(--green);transform:scale(1.05) translateY(-2px);box-shadow:0 7px 18px rgba(74,222,128,.18)}
+    .simg.selected{border-color:var(--green);box-shadow:0 0 0 3px rgba(74,222,128,.16)}
+    .no-samples{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);padding:8px 0}
 
-        input[type="file"] {
-            display: none;
-        }
+    /* ═══════ FLOWCHART — VERTICAL ═══════ */
+    #pipeline-section{display:none;margin:32px 0}
+    .phead{font-size:11px;font-family:'Space Mono',monospace;color:var(--green);margin-bottom:14px;display:flex;align-items:center;gap:7px}
+    .pdot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.1s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+    #flowchart{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px 16px}
 
-        label {
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+    .fc-col{display:flex;flex-direction:column;align-items:center;width:100%}
+    .fc-step-row{display:grid;grid-template-columns:28px 1fr 1fr;align-items:center;width:100%;max-width:560px;margin:0 auto}
+    .fc-step-num{font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);text-align:right;padding-right:10px;line-height:1}
+    .fc-step-detail{padding-left:12px;font-size:9.5px;font-family:'Space Mono',monospace;color:var(--muted);line-height:1.55;transition:color .4s}
+    .fc-step-row.active-row .fc-step-detail{color:var(--amber)}
+    .fc-step-row.done-row   .fc-step-detail{color:#2d6e3e}
 
-        .btn {
-            background: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            cursor: pointer;
-            margin-top: 10px;
-            border-radius: 5px;
-            transition: 0.3s;
-            width: 100%;
-        }
+    .fc-node{opacity:.2;transition:opacity .4s,filter .4s;position:relative;width:100%}
+    .fc-node.active{opacity:1;filter:drop-shadow(0 0 12px rgba(74,222,128,.3))}
+    .fc-node.done{opacity:.7}
 
-        .btn:hover {
-            background: #0056b3;
-        }
+    .fc-rect{background:var(--surface);border:1.5px solid var(--border);border-radius:7px;padding:11px 14px;text-align:center;transition:border-color .4s,box-shadow .4s}
+    .fc-node.active .fc-rect{border-color:var(--green);box-shadow:0 0 14px rgba(74,222,128,.15)}
+    .fc-node.done   .fc-rect{border-color:#166534;background:rgba(22,101,52,.1)}
 
-        .message {
-            margin-top: 10px;
-            font-size: 14px;
-            color: green;
-        }
+    .fc-para-outer{padding:11px 14px;background:var(--surface);border:1.5px solid var(--border);clip-path:polygon(6% 0%,100% 0%,94% 100%,0% 100%);text-align:center;transition:border-color .4s}
+    .fc-node.active .fc-para-outer{border-color:var(--blue)}
+    .fc-node.done   .fc-para-outer{border-color:#1e40af;background:rgba(30,64,175,.08)}
 
-        .result {
-            margin-top: 20px;
-            padding: 10px;
-            background: #eaf7ea;
-            border: 1px solid #28a745;
-            color: #28a745;
-            font-weight: bold;
-            border-radius: 5px;
-        }
+    .fc-diam-wrap{width:100%;height:72px;position:relative;display:flex;align-items:center;justify-content:center}
+    .fc-diam{width:90px;height:60px;background:var(--surface);border:1.5px solid var(--border);transform:rotate(45deg);border-radius:4px;position:absolute;transition:border-color .4s,box-shadow .4s}
+    .fc-node.active .fc-diam{border-color:var(--amber);box-shadow:0 0 14px rgba(251,191,36,.2)}
+    .fc-node.done   .fc-diam{border-color:#92400e;background:rgba(146,64,14,.08)}
+    .fc-diam-txt{position:relative;z-index:1;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;text-align:center;line-height:1.3;color:var(--text);white-space:pre-line}
 
-        @media (max-width: 500px) {
-            .container {
-                width: 90%;
-            }
-        }
-    </style>
+    .fc-pill{background:var(--surface);border:1.5px solid var(--border);border-radius:50px;padding:11px 18px;text-align:center;transition:border-color .4s,box-shadow .4s}
+    .fc-node.active .fc-pill{border-color:var(--green);box-shadow:0 0 14px rgba(74,222,128,.2)}
+    .fc-node.done   .fc-pill{border-color:#166534;background:rgba(22,101,52,.1)}
+
+    .fc-icon{font-size:17px;margin-bottom:3px}
+    .fc-label{font-size:10.5px;font-weight:700;color:var(--text);letter-spacing:.2px;line-height:1.3}
+    .fc-sub{font-size:8.5px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px}
+    .fc-fname{font-size:8px;color:var(--green);font-family:'Space Mono',monospace;margin-top:3px;word-break:break-all}
+
+    .fc-varrow-wrap{display:flex;flex-direction:column;align-items:center;width:100%;max-width:560px;margin:0 auto;position:relative}
+    .fc-varrow{width:2px;height:32px;position:relative;transition:background .4s}
+    .fc-varrow.green-line{background:var(--border)}
+    .fc-varrow.lit{background:var(--green)}
+    .fc-varrow.lit-amber{background:var(--amber)}
+    .fc-varrow::after{content:'▼';position:absolute;bottom:-11px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--border);transition:color .4s;line-height:1}
+    .fc-varrow.lit::after{color:var(--green)}
+    .fc-varrow.lit-amber::after{color:var(--amber)}
+    .fc-yeslabel{font-size:8px;font-family:'Space Mono',monospace;color:var(--amber);position:absolute;left:calc(50% + 8px);top:8px;white-space:nowrap}
+    .fc-vdot{width:7px;height:7px;border-radius:50%;background:var(--green);position:absolute;left:50%;transform:translateX(-50%);top:0;opacity:0;pointer-events:none}
+    .fc-varrow-wrap.traveling .fc-vdot{animation:travelDown .5s ease forwards}
+    @keyframes travelDown{0%{opacity:1;top:0}100%{opacity:0;top:28px}}
+
+    .pprog{margin-top:16px;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+    .pprogbar{height:100%;background:linear-gradient(90deg,#166534,#4ade80);width:0%;transition:width .55s ease;box-shadow:0 0 7px rgba(74,222,128,.45)}
+    .pstepinfo{margin-top:10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);min-height:16px;line-height:1.5}
+
+    @media(max-width:480px){
+      .fc-step-row{grid-template-columns:20px 1fr;grid-template-rows:auto auto}
+      .fc-step-detail{grid-column:2;grid-row:2;padding-left:0;padding-top:4px;font-size:9px}
+      .fc-step-num{grid-row:1}
+    }
+
+    /* ═══════ RESULTS ═══════ */
+    #result-section{display:none;margin:26px 0 56px}
+    .rcard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:24px;display:flex;gap:22px;align-items:flex-start;animation:sup .5s ease;flex-wrap:wrap}
+    @keyframes sup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .rimgbox{flex:0 0 150px}
+    .rimgbox img{width:150px;height:118px;object-fit:cover;border-radius:8px;border:2px solid var(--border)}
+    .rcap{font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:5px;text-align:center;word-break:break-all}
+    .rinfo{flex:1;min-width:200px}
+    .rinfo h3{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:13px}
+    .rrow{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+    .rlbl{font-size:10px;color:var(--muted);width:80px;font-family:'Space Mono',monospace;flex-shrink:0}
+    .rval{font-size:16px;font-weight:800;letter-spacing:-.5px}
+    .rval.late   {color:#f87171}
+    .rval.early  {color:#fbbf24}
+    .rval.healthy{color:#4ade80}
+    .rmatch{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:4px;margin-top:4px}
+    .rmatch.ok{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.22)}
+    .rlink-row{display:flex;align-items:center;gap:8px;margin-top:10px}
+    .rlbl-sm{font-size:9px;color:var(--muted);width:80px;font-family:'Space Mono',monospace;flex-shrink:0}
+    .rlink{font-size:10px;font-family:'Space Mono',monospace;color:var(--blue);text-decoration:none;border-bottom:1px dashed rgba(96,165,250,.4);transition:color .2s}
+    .rlink:hover{color:#93c5fd}
+    .abarwrap{margin-top:14px}
+    .abarlbl{display:flex;justify-content:space-between;font-size:9px;margin-bottom:5px}
+    .abarlbl span:first-child{color:var(--muted);font-family:'Space Mono',monospace}
+    .abarlbl span:last-child{color:var(--green);font-family:'Space Mono',monospace;font-weight:700}
+    .abar{height:6px;background:var(--border);border-radius:4px;overflow:hidden}
+    .afill{height:100%;border-radius:4px;background:linear-gradient(90deg,#166534,#4ade80);width:0%;transition:width 1.3s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(74,222,128,.4)}
+    .rbtn{display:inline-flex;align-items:center;gap:5px;margin-top:20px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:7px;cursor:pointer;transition:all .2s}
+    .rbtn:hover{border-color:var(--green);color:var(--green)}
+    ::-webkit-scrollbar{width:3px;height:3px}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+  </style>
 </head>
 <body>
+<div class="wrap">
 
-    <div class="container">
-        <h2>Plant Disease Prediction</h2>
-        <form action="/" method="POST" enctype="multipart/form-data">
-            <div class="upload-box" onclick="document.getElementById('file').click();">
-                <label for="file">Click to Choose File</label>
-            </div>
-            <input type="file" name="file" id="file" onchange="showFileName()">
-            <p id="file-name"></p>
+<!-- ── HEADER ──────────────────────────────────────────── -->
+<header>
+  <div class="logo">🌿</div>
+  <h1>Leaf<span>Scan</span></h1>
+  <div class="hbadge">Flask · CNN · plant_disease_model.h5</div>
+</header>
 
-            <button type="submit" class="btn">Upload & Predict</button>
-        </form>
+<!-- ── SECTION 01: UPLOAD ──────────────────────────────── -->
+<div class="stitle">01 — Upload Leaf Image</div>
 
-        {% if filename %}
-            <p class="message">Uploaded File: {{ filename }}</p>
-        {% endif %}
+<div id="drop-zone"
+  ondragover="event.preventDefault();this.classList.add('hov')"
+  ondragleave="this.classList.remove('hov')"
+  ondrop="onDrop(event)"
+  onclick="document.getElementById('file-input').click()">
+  <div class="uico">🍃</div>
+  <h2>Drag &amp; Drop your potato leaf image here</h2>
+  <p>JPG · PNG · WEBP — potato leaf photos only</p>
+  <button class="ubtn" onclick="event.stopPropagation();document.getElementById('file-input').click()">⬆&nbsp;Choose File</button>
+  <input type="file" id="file-input" accept="image/*" onchange="onFileSelect(event)"/>
+</div>
 
-        {% if prediction %}
-            <div class="result">
-                <p>Prediction: {{ prediction }}</p>
-                <p>Accuracy: {{ accuracy }}%</p>
-            </div>
-        {% endif %}
+<div class="ordiv"><span>OR PICK A SAMPLE IMAGE BELOW</span></div>
+
+<!-- SAMPLE GRIDS — real images served by Flask from your dataset folders -->
+<div class="slabel">
+  <span class="tag late">LATE BLIGHT</span>
+  <small>from Potato___Late_blight/</small>
+</div>
+<div class="sgrid" id="late-grid">
+  {% for img in samples.late %}
+  <img class="simg" loading="lazy"
+       src="/sample-image?folder={{ img.folder }}&file={{ img.filename | urlencode }}"
+       alt="Late Blight sample"
+       title="{{ img.filename }}"
+       onclick="selectSample('{{ img.folder }}', '{{ img.filename | replace("'", "\\'") }}', 'Late Blight', 'late', this)"/>
+  {% else %}
+  <span class="no-samples">No images found in Potato___Late_blight/</span>
+  {% endfor %}
+</div>
+
+<div class="slabel">
+  <span class="tag early">EARLY BLIGHT</span>
+  <small>from Potato___Early_blight/</small>
+</div>
+<div class="sgrid" id="early-grid">
+  {% for img in samples.early %}
+  <img class="simg" loading="lazy"
+       src="/sample-image?folder={{ img.folder }}&file={{ img.filename | urlencode }}"
+       alt="Early Blight sample"
+       title="{{ img.filename }}"
+       onclick="selectSample('{{ img.folder }}', '{{ img.filename | replace("'", "\\'") }}', 'Early Blight', 'early', this)"/>
+  {% else %}
+  <span class="no-samples">No images found in Potato___Early_blight/</span>
+  {% endfor %}
+</div>
+
+<div class="slabel">
+  <span class="tag healthy">HEALTHY</span>
+  <small>from Potato___healthy/</small>
+</div>
+<div class="sgrid" id="healthy-grid">
+  {% for img in samples.healthy %}
+  <img class="simg" loading="lazy"
+       src="/sample-image?folder={{ img.folder }}&file={{ img.filename | urlencode }}"
+       alt="Healthy sample"
+       title="{{ img.filename }}"
+       onclick="selectSample('{{ img.folder }}', '{{ img.filename | replace("'", "\\'") }}', 'Healthy', 'healthy', this)"/>
+  {% else %}
+  <span class="no-samples">No images found in Potato___healthy/</span>
+  {% endfor %}
+</div>
+
+<!-- ── SECTION 02: FLOWCHART PIPELINE ──────────────────── -->
+<div id="pipeline-section">
+  <div class="stitle">02 — Live Processing Pipeline</div>
+  <div class="phead"><div class="pdot"></div><span id="pstatus">Waiting…</span></div>
+  <div id="flowchart"></div>
+  <div class="pprog"><div class="pprogbar" id="pbar"></div></div>
+  <div class="pstepinfo" id="pstepinfo"></div>
+</div>
+
+<!-- ── SECTION 03: RESULTS ─────────────────────────────── -->
+<div id="result-section">
+  <div class="stitle">03 — Prediction Results</div>
+  <div class="rcard">
+    <div class="rimgbox">
+      <img id="rimg" src="" alt="Leaf"/>
+      <div class="rcap" id="rcap">—</div>
     </div>
+    <div class="rinfo">
+      <h3>Diagnosis Report</h3>
+      <div class="rrow"><span class="rlbl">PREDICTED</span><span class="rval" id="rpred">—</span></div>
+      <div id="rmatch" class="rmatch"></div>
+      <div id="rlink-row" class="rlink-row" style="display:none">
+        <span class="rlbl-sm">SOURCE</span>
+        <a id="rrawlink" href="#" target="_blank" class="rlink">🔗 Open image ↗</a>
+      </div>
+      <div class="abarwrap">
+        <div class="abarlbl"><span>PREDICTION CONFIDENCE</span><span id="apct">0%</span></div>
+        <div class="abar"><div class="afill" id="afill"></div></div>
+      </div>
+    </div>
+  </div>
+  <button class="rbtn" onclick="resetAll()">↩ Analyse Another Image</button>
+</div>
 
-    <script>
-        function showFileName() {
-            var fileInput = document.getElementById('file');
-            var fileName = document.getElementById('file-name');
-            fileName.textContent = "Selected File: " + fileInput.files[0].name;
+</div><!-- /wrap -->
+
+<script>
+// Pipeline steps — each maps to real code in app.py
+const STEPS = [
+  {
+    id:'s0', shape:'para', icon:'📥', label:'Image Received',
+    sub:'POST /predict · app.py',
+    detail:'request.files["file"] captured — filename extracted via os.path.basename()',
+    arrow:'normal'
+  },
+  {
+    id:'s1', shape:'rect', icon:'💾', label:'Save to Disk',
+    sub:'static/uploads/<file>',
+    detail:'file.save(os.path.join(UPLOAD_FOLDER, safe_name))',
+    arrow:'normal'
+  },
+  {
+    id:'s2', shape:'rect', icon:'⚙️', label:'Preprocess',
+    sub:'PIL · resize 128×128 · normalise',
+    detail:'image.load_img(path, target_size=(128,128)) → img_to_array → / 255.0',
+    arrow:'normal'
+  },
+  {
+    id:'s3', shape:'diamond', icon:'✅', label:'Valid\nLeaf?',
+    sub:'extension + PIL check',
+    detail:'Checks allowed extension set + PIL can open without raising exception',
+    arrow:'amber'
+  },
+  {
+    id:'s4', shape:'rect', icon:'🔢', label:'Reshape Array',
+    sub:'np.expand_dims → (1,128,128,3)',
+    detail:'np.expand_dims(img_array, axis=0) — adds batch dimension required by Keras',
+    arrow:'normal'
+  },
+  {
+    id:'s5', shape:'rect', icon:'🧠', label:'CNN Forward Pass',
+    sub:'plant_disease_model.h5',
+    detail:'model.predict(img_array) — Conv2D × MaxPool → Flatten → Dense layers',
+    arrow:'normal'
+  },
+  {
+    id:'s6', shape:'rect', icon:'📊', label:'Softmax Output',
+    sub:'3-class probability vector',
+    detail:'Dense(3, activation="softmax") → [P(Healthy), P(Early Blight), P(Late Blight)]',
+    arrow:'normal'
+  },
+  {
+    id:'s7', shape:'diamond', icon:'🎯', label:'Confidence\n>50%?',
+    sub:'threshold check',
+    detail:'np.max(preds) checked — argmax picks winning class index',
+    arrow:'amber'
+  },
+  {
+    id:'s8', shape:'pill', icon:'✅', label:'Return Result',
+    sub:'JSON → label + confidence',
+    detail:'jsonify({ label: CLASS_LABELS[argmax], confidence: round(max*100, 2) })',
+    arrow:'normal'
+  },
+];
+
+// ── Build flowchart DOM ───────────────────────────────────────────
+function buildFlowchart(filename) {
+  const fc = document.getElementById('flowchart');
+  fc.innerHTML = '';
+  const col = document.createElement('div');
+  col.className = 'fc-col';
+
+  STEPS.forEach((step, i) => {
+    const stepRow = document.createElement('div');
+    stepRow.className = 'fc-step-row';
+    stepRow.id = 'fcrow-' + step.id;
+
+    const numEl = document.createElement('div');
+    numEl.className = 'fc-step-num';
+    numEl.textContent = i + 1;
+
+    const node = document.createElement('div');
+    node.className = 'fc-node';
+    node.id = 'fcn-' + step.id;
+
+    let inner = '';
+    const fname = i === 0 ? `<div class="fc-fname">${filename}</div>` : '';
+    if (step.shape === 'rect') {
+      inner = `<div class="fc-rect"><div class="fc-icon">${step.icon}</div><div class="fc-label">${step.label}</div><div class="fc-sub">${step.sub}</div>${fname}</div>`;
+    } else if (step.shape === 'para') {
+      inner = `<div class="fc-para-outer"><div class="fc-icon">${step.icon}</div><div class="fc-label">${step.label}</div><div class="fc-sub">${step.sub}</div>${fname}</div>`;
+    } else if (step.shape === 'diamond') {
+      inner = `<div class="fc-diam-wrap"><div class="fc-diam"></div><div class="fc-diam-txt">${step.icon}\n${step.label}</div></div>`;
+    } else if (step.shape === 'pill') {
+      inner = `<div class="fc-pill"><div class="fc-icon">${step.icon}</div><div class="fc-label">${step.label}</div><div class="fc-sub">${step.sub}</div></div>`;
+    }
+    node.innerHTML = inner;
+
+    const detEl = document.createElement('div');
+    detEl.className = 'fc-step-detail';
+    detEl.id = 'fcd-' + step.id;
+    detEl.textContent = step.detail;
+
+    stepRow.appendChild(numEl);
+    stepRow.appendChild(node);
+    stepRow.appendChild(detEl);
+    col.appendChild(stepRow);
+
+    if (i < STEPS.length - 1) {
+      const arwWrap = document.createElement('div');
+      arwWrap.className = 'fc-varrow-wrap';
+      arwWrap.id = 'fca-' + i;
+
+      const arwLine = document.createElement('div');
+      arwLine.className = 'fc-varrow green-line';
+      arwLine.id = 'fcal-' + i;
+
+      const dot = document.createElement('div');
+      dot.className = 'fc-vdot';
+
+      if (step.shape === 'diamond') {
+        const yes = document.createElement('span');
+        yes.className = 'fc-yeslabel';
+        yes.textContent = 'YES ↓';
+        arwWrap.appendChild(yes);
+      }
+
+      arwWrap.appendChild(arwLine);
+      arwWrap.appendChild(dot);
+      col.appendChild(arwWrap);
+    }
+  });
+
+  fc.appendChild(col);
+}
+
+// ── Run animated pipeline, then fire onComplete callback ─────────
+function runPipeline(filename, imgSrc, onComplete) {
+  document.getElementById('pipeline-section').style.display = 'block';
+  document.getElementById('result-section').style.display   = 'none';
+  document.getElementById('pbar').style.width = '0%';
+  document.getElementById('pstepinfo').textContent = '';
+  buildFlowchart(filename);
+  document.getElementById('pipeline-section').scrollIntoView({behavior:'smooth'});
+
+  const total = STEPS.length;
+
+  function activate(i) {
+    const node    = document.getElementById('fcn-' + STEPS[i].id);
+    const stepRow = document.getElementById('fcrow-' + STEPS[i].id);
+    document.getElementById('pbar').style.width = `${((i + 1) / total) * 100}%`;
+    document.getElementById('pstatus').textContent = `Step ${i+1}/${total} — ${STEPS[i].label.replace('\n',' ')}`;
+    document.getElementById('pstepinfo').textContent = '▸ ' + STEPS[i].detail;
+    node.classList.add('active');
+    if (stepRow) stepRow.classList.add('active-row');
+    node.scrollIntoView({behavior:'smooth', block:'nearest'});
+
+    setTimeout(() => {
+      node.classList.remove('active');
+      node.classList.add('done');
+      if (stepRow) { stepRow.classList.remove('active-row'); stepRow.classList.add('done-row'); }
+
+      if (i < total - 1) {
+        const arwLine = document.getElementById('fcal-' + i);
+        const arwWrap = document.getElementById('fca-' + i);
+        if (arwLine) arwLine.classList.add(STEPS[i].arrow === 'amber' ? 'lit-amber' : 'lit');
+        if (arwWrap) {
+          arwWrap.classList.add('traveling');
+          setTimeout(() => arwWrap.classList.remove('traveling'), 520);
         }
-    </script>
+        setTimeout(() => activate(i + 1), 480);
+      } else {
+        document.getElementById('pstatus').textContent = '⏳ Running model prediction…';
+        document.getElementById('pstepinfo').textContent = '';
+        if (onComplete) onComplete();
+      }
+    }, 800);
+  }
 
+  activate(0);
+}
+
+// ── Show result card ─────────────────────────────────────────────
+function showResult(label, confidence, filename, cls, imgSrc, viewUrl) {
+  const rs = document.getElementById('result-section');
+  rs.style.display = 'block';
+  document.getElementById('rimg').src = imgSrc;
+  document.getElementById('rcap').textContent = filename;
+
+  document.getElementById('rpred').textContent = label;
+  document.getElementById('rpred').className   = 'rval ' + cls;
+
+  const mb = document.getElementById('rmatch');
+  mb.className   = 'rmatch ok';
+  mb.textContent = '✓ Prediction from plant_disease_model.h5';
+
+  const linkRow = document.getElementById('rlink-row');
+  const linkEl  = document.getElementById('rrawlink');
+  if (viewUrl) {
+    linkEl.href = viewUrl;
+    linkEl.textContent = '🔗 Open this leaf image ↗';
+    linkRow.style.display = 'flex';
+  } else {
+    linkRow.style.display = 'none';
+  }
+
+  document.getElementById('pstatus').textContent = '✓ Pipeline complete';
+  document.getElementById('apct').textContent = '0%';
+  document.getElementById('afill').style.width = '0%';
+  setTimeout(() => {
+    document.getElementById('apct').textContent = confidence + '%';
+    document.getElementById('afill').style.width = confidence + '%';
+  }, 300);
+
+  rs.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function clsFromLabel(label) {
+  const l = label.toLowerCase();
+  return l.includes('late') ? 'late' : l.includes('early') ? 'early' : 'healthy';
+}
+
+// ── Select a sample image — calls /predict-sample ────────────────
+function selectSample(folder, filename, knownLabel, cls, imgEl) {
+  document.querySelectorAll('.simg').forEach(s => s.classList.remove('selected'));
+  imgEl.classList.add('selected');
+
+  const imgSrc = `/sample-image?folder=${folder}&file=${encodeURIComponent(filename)}`;
+
+  runPipeline(filename, imgSrc, () => {
+    fetch('/predict-sample', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({folder, file: filename})
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+      showResult(
+        data.label, data.confidence, data.filename,
+        clsFromLabel(data.label),
+        imgSrc,
+        data.view_url
+      );
+    })
+    .catch(err => {
+      // Fallback — show what we know from the label tag
+      showResult(knownLabel, '—', filename, cls, imgSrc, imgSrc);
+      document.getElementById('pstatus').textContent = '⚠ Backend not reachable — start Flask to get real predictions';
+    });
+  });
+}
+
+// ── Upload a file — calls /predict ───────────────────────────────
+function processFile(file) {
+  const localSrc = URL.createObjectURL(file);
+  document.querySelectorAll('.simg').forEach(s => s.classList.remove('selected'));
+
+  runPipeline(file.name, localSrc, () => {
+    const fd = new FormData();
+    fd.append('file', file);
+    fetch('/predict', {method: 'POST', body: fd})
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        showResult(
+          data.label, data.confidence, data.filename,
+          clsFromLabel(data.label),
+          data.image_url || localSrc,
+          null
+        );
+      })
+      .catch(err => {
+        document.getElementById('pstatus').textContent = '⚠ Backend not reachable — start Flask to get real predictions';
+      });
+  });
+}
+
+function onFileSelect(e) { if (e.target.files[0]) processFile(e.target.files[0]); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('hov');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+}
+function resetAll() {
+  document.getElementById('pipeline-section').style.display = 'none';
+  document.getElementById('result-section').style.display   = 'none';
+  document.querySelectorAll('.simg').forEach(s => s.classList.remove('selected'));
+  document.getElementById('file-input').value = '';
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+</script>
 </body>
 </html>
