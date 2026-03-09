@@ -12,7 +12,7 @@ UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-model = load_model('plant_disease_model.h5')
+model = load_model('plant_disease_model.h5',compile=False)
 
 # Must match your training order
 CLASS_LABELS = ['Healthy', 'Early Blight', 'Late Blight']
