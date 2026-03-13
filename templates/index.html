@@ -37,8 +37,12 @@
     #drop-zone h2{font-size:17px;font-weight:700;margin-bottom:5px}
     #drop-zone p{color:var(--muted);font-size:12px;margin-bottom:16px;font-family:'Space Mono',monospace}
     #file-input{display:none}
+    #camera-input{display:none}
+    .btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
     .ubtn{display:inline-flex;align-items:center;gap:6px;background:var(--green);color:#0a0f0a;font-family:'Syne',sans-serif;font-weight:700;border:none;padding:10px 22px;border-radius:7px;cursor:pointer;font-size:12px;transition:all .2s}
     .ubtn:hover{background:#86efac;transform:translateY(-1px);box-shadow:0 7px 18px rgba(74,222,128,.3)}
+    .ubtn.outline{background:transparent;color:var(--green);border:1.5px solid var(--green)}
+    .ubtn.outline:hover{background:rgba(74,222,128,.08)}
 
     /* OR DIVIDER */
     .ordiv{display:flex;align-items:center;gap:12px;margin:26px 0 20px;color:var(--muted);font-family:'Space Mono',monospace;font-size:10px}
@@ -56,7 +60,18 @@
     .simg{width:112px;height:86px;border-radius:7px;object-fit:cover;cursor:pointer;border:2px solid transparent;transition:all .22s;background:#0d170d}
     .simg:hover{border-color:var(--green);transform:scale(1.05) translateY(-2px);box-shadow:0 7px 18px rgba(74,222,128,.18)}
     .simg.selected{border-color:var(--green);box-shadow:0 0 0 3px rgba(74,222,128,.16)}
-    .no-samples{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);padding:8px 0}
+
+    /* CAMERA MODAL */
+    #camera-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;align-items:center;justify-content:center;padding:20px}
+    #camera-modal.open{display:flex}
+    .cam-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:480px;width:100%;text-align:center}
+    .cam-box h3{font-size:15px;font-weight:700;margin-bottom:14px}
+    #cam-video{width:100%;border-radius:8px;background:#000;aspect-ratio:4/3;object-fit:cover;display:block}
+    #cam-canvas{display:none}
+    .cam-btns{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+    .cam-close{position:absolute;top:16px;right:20px;background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px}
+    .cam-close:hover{border-color:var(--red);color:var(--red)}
+    .cam-box{position:relative}
 
     /* ═══════ FLOWCHART — VERTICAL ═══════ */
     #pipeline-section{display:none;margin:32px 0}
@@ -116,12 +131,6 @@
     .pprogbar{height:100%;background:linear-gradient(90deg,#166534,#4ade80);width:0%;transition:width .55s ease;box-shadow:0 0 7px rgba(74,222,128,.45)}
     .pstepinfo{margin-top:10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--amber);min-height:16px;line-height:1.5}
 
-    @media(max-width:480px){
-      .fc-step-row{grid-template-columns:20px 1fr;grid-template-rows:auto auto}
-      .fc-step-detail{grid-column:2;grid-row:2;padding-left:0;padding-top:4px;font-size:9px}
-      .fc-step-num{grid-row:1}
-    }
-
     /* ═══════ RESULTS ═══════ */
     #result-section{display:none;margin:26px 0 56px}
     .rcard{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:24px;display:flex;gap:22px;align-items:flex-start;animation:sup .5s ease;flex-wrap:wrap}
@@ -139,6 +148,7 @@
     .rval.healthy{color:#4ade80}
     .rmatch{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:4px;margin-top:4px}
     .rmatch.ok{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.22)}
+    .rmatch.err{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.22)}
     .rlink-row{display:flex;align-items:center;gap:8px;margin-top:10px}
     .rlbl-sm{font-size:9px;color:var(--muted);width:80px;font-family:'Space Mono',monospace;flex-shrink:0}
     .rlink{font-size:10px;font-family:'Space Mono',monospace;color:var(--blue);text-decoration:none;border-bottom:1px dashed rgba(96,165,250,.4);transition:color .2s}
@@ -151,8 +161,18 @@
     .afill{height:100%;border-radius:4px;background:linear-gradient(90deg,#166534,#4ade80);width:0%;transition:width 1.3s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(74,222,128,.4)}
     .rbtn{display:inline-flex;align-items:center;gap:5px;margin-top:20px;font-family:'Syne',sans-serif;font-size:11px;font-weight:600;background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:7px;cursor:pointer;transition:all .2s}
     .rbtn:hover{border-color:var(--green);color:var(--green)}
+
+    /* ERROR TOAST */
+    #toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a0a0a;border:1px solid var(--red);color:var(--red);font-family:'Space Mono',monospace;font-size:11px;padding:10px 18px;border-radius:8px;z-index:999;white-space:nowrap}
+
     ::-webkit-scrollbar{width:3px;height:3px}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+    @media(max-width:480px){
+      .fc-step-row{grid-template-columns:20px 1fr;grid-template-rows:auto auto}
+      .fc-step-detail{grid-column:2;grid-row:2;padding-left:0;padding-top:4px;font-size:9px}
+      .fc-step-num{grid-row:1}
+    }
   </style>
 </head>
 <body>
@@ -162,11 +182,11 @@
 <header>
   <div class="logo">🌿</div>
   <h1>Leaf<span>Scan</span></h1>
-  <div class="hbadge">Flask · CNN · plant_disease_model.h5</div>
+  <div class="hbadge">Flask · CNN · plant_disease_model.keras</div>
 </header>
 
 <!-- ── SECTION 01: UPLOAD ──────────────────────────────── -->
-<div class="stitle">01 — Upload Leaf Image</div>
+<div class="stitle">01 — Upload or Capture Leaf Image</div>
 
 <div id="drop-zone"
   ondragover="event.preventDefault();this.classList.add('hov')"
@@ -176,58 +196,51 @@
   <div class="uico">🍃</div>
   <h2>Drag &amp; Drop your potato leaf image here</h2>
   <p>JPG · PNG · WEBP — potato leaf photos only</p>
-  <button class="ubtn" onclick="event.stopPropagation();document.getElementById('file-input').click()">⬆&nbsp;Choose File</button>
+  <div class="btn-row">
+    <button class="ubtn" onclick="event.stopPropagation();document.getElementById('file-input').click()">⬆ Choose File</button>
+    <button class="ubtn outline" onclick="event.stopPropagation();openCamera()">📷 Take Photo</button>
+  </div>
   <input type="file" id="file-input" accept="image/*" onchange="onFileSelect(event)"/>
+  <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="onFileSelect(event)"/>
 </div>
 
 <div class="ordiv"><span>OR PICK A SAMPLE IMAGE BELOW</span></div>
 
-<!-- SAMPLE GRIDS — real images served by Flask from your dataset folders -->
+<!-- SAMPLE GRIDS -->
 <div class="slabel">
   <span class="tag late">LATE BLIGHT</span>
-  <small>from Potato___Late_blight/</small>
+  <small>click any image to analyse</small>
 </div>
-<div class="sgrid" id="late-grid">
-  {% for img in samples.late %}
-  <img class="simg" loading="lazy"
-       src="/sample-image?folder={{ img.folder }}&file={{ img.filename | urlencode }}"
-       alt="Late Blight sample"
-       title="{{ img.filename }}"
-       onclick="selectSample('{{ img.folder }}', '{{ img.filename | replace("'", "\\'") }}', 'Late Blight', 'late', this)"/>
-  {% else %}
-  <span class="no-samples">No images found in Potato___Late_blight/</span>
+<div class="sgrid">
+  {% for img in samples["Late Blight"] %}
+  <img src="{{ url_for('static', filename=img) }}"
+       class="simg"
+       onclick="predictSample('{{ img }}')"
+       title="{{ img }}">
   {% endfor %}
 </div>
 
 <div class="slabel">
   <span class="tag early">EARLY BLIGHT</span>
-  <small>from Potato___Early_blight/</small>
 </div>
-<div class="sgrid" id="early-grid">
-  {% for img in samples.early %}
-  <img class="simg" loading="lazy"
-       src="/sample-image?folder={{ img.folder }}&file={{ img.filename | urlencode }}"
-       alt="Early Blight sample"
-       title="{{ img.filename }}"
-       onclick="selectSample('{{ img.folder }}', '{{ img.filename | replace("'", "\\'") }}', 'Early Blight', 'early', this)"/>
-  {% else %}
-  <span class="no-samples">No images found in Potato___Early_blight/</span>
+<div class="sgrid">
+  {% for img in samples["Early Blight"] %}
+  <img src="{{ url_for('static', filename=img) }}"
+       class="simg"
+       onclick="predictSample('{{ img }}')"
+       title="{{ img }}">
   {% endfor %}
 </div>
 
 <div class="slabel">
   <span class="tag healthy">HEALTHY</span>
-  <small>from Potato___healthy/</small>
 </div>
-<div class="sgrid" id="healthy-grid">
-  {% for img in samples.healthy %}
-  <img class="simg" loading="lazy"
-       src="/sample-image?folder={{ img.folder }}&file={{ img.filename | urlencode }}"
-       alt="Healthy sample"
-       title="{{ img.filename }}"
-       onclick="selectSample('{{ img.folder }}', '{{ img.filename | replace("'", "\\'") }}', 'Healthy', 'healthy', this)"/>
-  {% else %}
-  <span class="no-samples">No images found in Potato___healthy/</span>
+<div class="sgrid">
+  {% for img in samples["Healthy"] %}
+  <img src="{{ url_for('static', filename=img) }}"
+       class="simg"
+       onclick="predictSample('{{ img }}')"
+       title="{{ img }}">
   {% endfor %}
 </div>
 
@@ -267,64 +280,44 @@
 
 </div><!-- /wrap -->
 
+<!-- ── CAMERA MODAL ─────────────────────────────────────── -->
+<div id="camera-modal">
+  <div class="cam-box">
+    <button class="cam-close" onclick="closeCamera()">✕ Close</button>
+    <h3>📷 Camera Preview</h3>
+    <video id="cam-video" autoplay playsinline muted></video>
+    <canvas id="cam-canvas"></canvas>
+    <div class="cam-btns">
+      <button class="ubtn" onclick="capturePhoto()">📸 Capture</button>
+      <button class="ubtn outline" onclick="closeCamera()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ERROR TOAST ─────────────────────────────────────── -->
+<div id="toast"></div>
+
 <script>
-// Pipeline steps — each maps to real code in app.py
+// ── Pipeline steps ────────────────────────────────────────────────
 const STEPS = [
-  {
-    id:'s0', shape:'para', icon:'📥', label:'Image Received',
-    sub:'POST /predict · app.py',
-    detail:'request.files["file"] captured — filename extracted via os.path.basename()',
-    arrow:'normal'
-  },
-  {
-    id:'s1', shape:'rect', icon:'💾', label:'Save to Disk',
-    sub:'static/uploads/<file>',
-    detail:'file.save(os.path.join(UPLOAD_FOLDER, safe_name))',
-    arrow:'normal'
-  },
-  {
-    id:'s2', shape:'rect', icon:'⚙️', label:'Preprocess',
-    sub:'PIL · resize 128×128 · normalise',
-    detail:'image.load_img(path, target_size=(128,128)) → img_to_array → / 255.0',
-    arrow:'normal'
-  },
-  {
-    id:'s3', shape:'diamond', icon:'✅', label:'Valid\nLeaf?',
-    sub:'extension + PIL check',
-    detail:'Checks allowed extension set + PIL can open without raising exception',
-    arrow:'amber'
-  },
-  {
-    id:'s4', shape:'rect', icon:'🔢', label:'Reshape Array',
-    sub:'np.expand_dims → (1,128,128,3)',
-    detail:'np.expand_dims(img_array, axis=0) — adds batch dimension required by Keras',
-    arrow:'normal'
-  },
-  {
-    id:'s5', shape:'rect', icon:'🧠', label:'CNN Forward Pass',
-    sub:'plant_disease_model.h5',
-    detail:'model.predict(img_array) — Conv2D × MaxPool → Flatten → Dense layers',
-    arrow:'normal'
-  },
-  {
-    id:'s6', shape:'rect', icon:'📊', label:'Softmax Output',
-    sub:'3-class probability vector',
-    detail:'Dense(3, activation="softmax") → [P(Healthy), P(Early Blight), P(Late Blight)]',
-    arrow:'normal'
-  },
-  {
-    id:'s7', shape:'diamond', icon:'🎯', label:'Confidence\n>50%?',
-    sub:'threshold check',
-    detail:'np.max(preds) checked — argmax picks winning class index',
-    arrow:'amber'
-  },
-  {
-    id:'s8', shape:'pill', icon:'✅', label:'Return Result',
-    sub:'JSON → label + confidence',
-    detail:'jsonify({ label: CLASS_LABELS[argmax], confidence: round(max*100, 2) })',
-    arrow:'normal'
-  },
+  {id:'s0',shape:'para',icon:'📥',label:'Image Received',sub:'POST /predict · app.py',detail:'request.files["file"] captured — filename extracted via os.path.basename()',arrow:'normal'},
+  {id:'s1',shape:'rect',icon:'💾',label:'Save to Disk',sub:'static/uploads/<file>',detail:'file.save(os.path.join(UPLOAD_FOLDER, safe_name))',arrow:'normal'},
+  {id:'s2',shape:'rect',icon:'⚙️',label:'Preprocess',sub:'PIL · resize 128×128 · normalise',detail:'image.load_img(path, target_size=(128,128)) → img_to_array → / 255.0',arrow:'normal'},
+  {id:'s3',shape:'diamond',icon:'✅',label:'Valid\nLeaf?',sub:'extension + PIL check',detail:'Checks allowed extension set + PIL can open without raising exception',arrow:'amber'},
+  {id:'s4',shape:'rect',icon:'🔢',label:'Reshape Array',sub:'np.expand_dims → (1,128,128,3)',detail:'np.expand_dims(img_array, axis=0) — adds batch dimension required by Keras',arrow:'normal'},
+  {id:'s5',shape:'rect',icon:'🧠',label:'CNN Forward Pass',sub:'plant_disease_model.keras',detail:'model.predict(img_array) — Conv2D × MaxPool → Flatten → Dense layers',arrow:'normal'},
+  {id:'s6',shape:'rect',icon:'📊',label:'Softmax Output',sub:'3-class probability vector',detail:'Dense(3, activation="softmax") → [P(Early Blight), P(Late Blight), P(Healthy)]',arrow:'normal'},
+  {id:'s7',shape:'diamond',icon:'🎯',label:'Confidence\n>50%?',sub:'threshold check',detail:'np.max(preds) checked — argmax picks winning class index',arrow:'amber'},
+  {id:'s8',shape:'pill',icon:'✅',label:'Return Result',sub:'JSON → label + confidence',detail:'jsonify({ label: CLASS_LABELS[argmax], confidence: round(max*100, 2) })',arrow:'normal'},
 ];
+
+// ── Toast error helper ────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '⚠ ' + msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 4000);
+}
 
 // ── Build flowchart DOM ───────────────────────────────────────────
 function buildFlowchart(filename) {
@@ -346,8 +339,8 @@ function buildFlowchart(filename) {
     node.className = 'fc-node';
     node.id = 'fcn-' + step.id;
 
-    let inner = '';
     const fname = i === 0 ? `<div class="fc-fname">${filename}</div>` : '';
+    let inner = '';
     if (step.shape === 'rect') {
       inner = `<div class="fc-rect"><div class="fc-icon">${step.icon}</div><div class="fc-label">${step.label}</div><div class="fc-sub">${step.sub}</div>${fname}</div>`;
     } else if (step.shape === 'para') {
@@ -387,7 +380,6 @@ function buildFlowchart(filename) {
         yes.textContent = 'YES ↓';
         arwWrap.appendChild(yes);
       }
-
       arwWrap.appendChild(arwLine);
       arwWrap.appendChild(dot);
       col.appendChild(arwWrap);
@@ -397,8 +389,8 @@ function buildFlowchart(filename) {
   fc.appendChild(col);
 }
 
-// ── Run animated pipeline, then fire onComplete callback ─────────
-function runPipeline(filename, imgSrc, onComplete) {
+// ── Animate pipeline steps, then call onComplete ─────────────────
+function runPipeline(filename, onComplete) {
   document.getElementById('pipeline-section').style.display = 'block';
   document.getElementById('result-section').style.display   = 'none';
   document.getElementById('pbar').style.width = '0%';
@@ -416,7 +408,6 @@ function runPipeline(filename, imgSrc, onComplete) {
     document.getElementById('pstepinfo').textContent = '▸ ' + STEPS[i].detail;
     node.classList.add('active');
     if (stepRow) stepRow.classList.add('active-row');
-    node.scrollIntoView({behavior:'smooth', block:'nearest'});
 
     setTimeout(() => {
       node.classList.remove('active');
@@ -444,24 +435,26 @@ function runPipeline(filename, imgSrc, onComplete) {
 }
 
 // ── Show result card ─────────────────────────────────────────────
-function showResult(label, confidence, filename, cls, imgSrc, viewUrl) {
+function showResult(label, confidence, filename, imgSrc, viewUrl) {
+  const cls = label.toLowerCase().includes('late') ? 'late'
+            : label.toLowerCase().includes('early') ? 'early' : 'healthy';
+
   const rs = document.getElementById('result-section');
   rs.style.display = 'block';
+
   document.getElementById('rimg').src = imgSrc;
   document.getElementById('rcap').textContent = filename;
-
   document.getElementById('rpred').textContent = label;
   document.getElementById('rpred').className   = 'rval ' + cls;
 
   const mb = document.getElementById('rmatch');
   mb.className   = 'rmatch ok';
-  mb.textContent = '✓ Prediction from plant_disease_model.h5';
+  mb.textContent = '✓ Prediction from plant_disease_model.keras';
 
   const linkRow = document.getElementById('rlink-row');
-  const linkEl  = document.getElementById('rrawlink');
   if (viewUrl) {
-    linkEl.href = viewUrl;
-    linkEl.textContent = '🔗 Open this leaf image ↗';
+    document.getElementById('rrawlink').href = viewUrl;
+    document.getElementById('rrawlink').textContent = '🔗 Open this leaf image ↗';
     linkRow.style.display = 'flex';
   } else {
     linkRow.style.display = 'none';
@@ -470,71 +463,76 @@ function showResult(label, confidence, filename, cls, imgSrc, viewUrl) {
   document.getElementById('pstatus').textContent = '✓ Pipeline complete';
   document.getElementById('apct').textContent = '0%';
   document.getElementById('afill').style.width = '0%';
+
   setTimeout(() => {
-    document.getElementById('apct').textContent = confidence + '%';
-    document.getElementById('afill').style.width = confidence + '%';
+    const pct = typeof confidence === 'number' ? confidence : parseFloat(confidence) || 0;
+    document.getElementById('apct').textContent = pct + '%';
+    document.getElementById('afill').style.width = pct + '%';
   }, 300);
 
   rs.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
-function clsFromLabel(label) {
-  const l = label.toLowerCase();
-  return l.includes('late') ? 'late' : l.includes('early') ? 'early' : 'healthy';
-}
+// ── Sample image click — sends img_path to /predict-sample ───────
+function predictSample(imgPath) {
+  // imgPath e.g. "samples/early_blight/early1.jpg"
+  const filename = imgPath.split('/').pop();
+  const imgSrc   = '/static/' + imgPath;
 
-// ── Select a sample image — calls /predict-sample ────────────────
-function selectSample(folder, filename, knownLabel, cls, imgEl) {
   document.querySelectorAll('.simg').forEach(s => s.classList.remove('selected'));
-  imgEl.classList.add('selected');
+  // highlight selected
+  document.querySelectorAll('.simg').forEach(s => {
+    if (s.getAttribute('onclick') && s.getAttribute('onclick').includes(imgPath)) {
+      s.classList.add('selected');
+    }
+  });
 
-  const imgSrc = `/sample-image?folder=${folder}&file=${encodeURIComponent(filename)}`;
-
-  runPipeline(filename, imgSrc, () => {
+  runPipeline(filename, () => {
     fetch('/predict-sample', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({folder, file: filename})
+      body: JSON.stringify({ img_path: imgPath })
     })
     .then(r => r.json())
     .then(data => {
-      if (data.error) throw new Error(data.error);
-      showResult(
-        data.label, data.confidence, data.filename,
-        clsFromLabel(data.label),
-        imgSrc,
-        data.view_url
-      );
+      if (data.error) {
+        showToast(data.error);
+        document.getElementById('pstatus').textContent = '⚠ Error: ' + data.error;
+        return;
+      }
+      showResult(data.label, data.confidence, data.filename, imgSrc, data.view_url || imgSrc);
     })
     .catch(err => {
-      // Fallback — show what we know from the label tag
-      showResult(knownLabel, '—', filename, cls, imgSrc, imgSrc);
-      document.getElementById('pstatus').textContent = '⚠ Backend not reachable — start Flask to get real predictions';
+      showToast('Network error — is Flask running?');
+      document.getElementById('pstatus').textContent = '⚠ Could not reach server';
     });
   });
 }
 
-// ── Upload a file — calls /predict ───────────────────────────────
+// ── File upload — sends to /predict ──────────────────────────────
 function processFile(file) {
   const localSrc = URL.createObjectURL(file);
   document.querySelectorAll('.simg').forEach(s => s.classList.remove('selected'));
 
-  runPipeline(file.name, localSrc, () => {
+  runPipeline(file.name, () => {
     const fd = new FormData();
     fd.append('file', file);
-    fetch('/predict', {method: 'POST', body: fd})
+
+    fetch('/predict', {method:'POST', body:fd})
       .then(r => r.json())
       .then(data => {
-        if (data.error) throw new Error(data.error);
-        showResult(
-          data.label, data.confidence, data.filename,
-          clsFromLabel(data.label),
-          data.image_url || localSrc,
-          null
-        );
+        if (data.error) {
+          showToast(data.error);
+          document.getElementById('pstatus').textContent = '⚠ Error: ' + data.error;
+          return;
+        }
+        // Use server image_url if available, fallback to local blob
+        const imgSrc = data.image_url || localSrc;
+        showResult(data.label, data.confidence, data.filename || file.name, imgSrc, null);
       })
-      .catch(err => {
-        document.getElementById('pstatus').textContent = '⚠ Backend not reachable — start Flask to get real predictions';
+      .catch(() => {
+        showToast('Network error — is Flask running?');
+        document.getElementById('pstatus').textContent = '⚠ Could not reach server';
       });
   });
 }
@@ -545,12 +543,68 @@ function onDrop(e) {
   document.getElementById('drop-zone').classList.remove('hov');
   if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
 }
+
+// ── Camera ────────────────────────────────────────────────────────
+let cameraStream = null;
+
+function openCamera() {
+  const modal = document.getElementById('camera-modal');
+
+  // On mobile, use the capture input which directly opens camera
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (isMobile) {
+    document.getElementById('camera-input').click();
+    return;
+  }
+
+  // Desktop: use getUserMedia preview
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showToast('Camera not supported in this browser');
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false})
+    .then(stream => {
+      cameraStream = stream;
+      const video = document.getElementById('cam-video');
+      video.srcObject = stream;
+      modal.classList.add('open');
+    })
+    .catch(() => {
+      showToast('Could not access camera — try uploading a file instead');
+    });
+}
+
+function closeCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  document.getElementById('camera-modal').classList.remove('open');
+}
+
+function capturePhoto() {
+  const video  = document.getElementById('cam-video');
+  const canvas = document.getElementById('cam-canvas');
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  closeCamera();
+
+  canvas.toBlob(blob => {
+    const file = new File([blob], 'camera_capture.jpg', {type:'image/jpeg'});
+    processFile(file);
+  }, 'image/jpeg', 0.92);
+}
+
+// ── Reset ─────────────────────────────────────────────────────────
 function resetAll() {
   document.getElementById('pipeline-section').style.display = 'none';
   document.getElementById('result-section').style.display   = 'none';
   document.querySelectorAll('.simg').forEach(s => s.classList.remove('selected'));
-  document.getElementById('file-input').value = '';
-  window.scrollTo({top: 0, behavior: 'smooth'});
+  document.getElementById('file-input').value   = '';
+  document.getElementById('camera-input').value = '';
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 </script>
 </body>

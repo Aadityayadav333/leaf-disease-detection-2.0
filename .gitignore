@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+plant-env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# Model weights (too large for GitHub — host on Git LFS or Render disk)
+# ⚠ Uncomment the line below ONLY if you are NOT using Git LFS
+# plant_disease_model.keras
+
+# Dataset — do NOT push raw training images (large + not needed for deployment)
+dataset/
+
+# Uploaded images at runtime (ephemeral on Render anyway)
+static/uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+*.env
