@@ -1,10 +1,14 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-from flask import Flask, render_template, request, jsonify, url_for
+import uuid
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.preprocessing import image
+from PIL import Image
+from flask import Flask, render_template, request, jsonify, url_for
+
+# ── LiteRT (ai-edge-litert on Render) — full TF fallback locally ─
+try:
+    from ai_edge_litert.interpreter import Interpreter
+except ImportError:
+    from tensorflow.lite.python.interpreter import Interpreter
 
 app = Flask(__name__)
 
@@ -12,10 +16,22 @@ UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Load model
-model = tf.keras.models.load_model("plant_disease_model.keras", compile=False)
+# ── Load TFLite model once at startup ────────────────────────────
+interpreter = Interpreter(model_path="mobilenet_model.tflite")
+interpreter.allocate_tensors()
 
-# Sample images served from static/samples/
+input_details  = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+INPUT_H = input_details[0]['shape'][1]  # 224
+INPUT_W = input_details[0]['shape'][2]  # 224
+
+# Alphabetical folder order Keras used during training:
+# Potato___Early_blight → 0
+# Potato___Late_blight  → 1
+# Potato___healthy      → 2
+CLASS_LABELS = ["Early Blight", "Late Blight", "Healthy"]
+
 SAMPLE_IMAGES = {
     "Early Blight": [
         "samples/early_blight/early1.jpg",
@@ -34,51 +50,37 @@ SAMPLE_IMAGES = {
     ]
 }
 
-# Must match training order
-CLASS_LABELS = ["Early Blight", "Late Blight", "Healthy"]
 
-
-# ========================
-# MODEL PREDICTION FUNCTION
-# ========================
 def run_model(file_path):
-    img = image.load_img(file_path, target_size=(128, 128))
-    img_array = image.img_to_array(img)
-    img_array = np.expand_dims(img_array, axis=0) / 255.0
+    img = Image.open(file_path).convert("RGB").resize((INPUT_W, INPUT_H))
+    img_array = np.array(img, dtype=np.float32) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-    preds = model.predict(img_array)
+    interpreter.set_tensor(input_details[0]['index'], img_array)
+    interpreter.invoke()
 
+    preds = interpreter.get_tensor(output_details[0]['index'])[0]
     predicted_idx = int(np.argmax(preds))
-    confidence = round(float(np.max(preds)) * 100, 2)
+    confidence    = round(float(np.max(preds)) * 100, 2)
 
     return CLASS_LABELS[predicted_idx], confidence
 
 
-# ========================
-# HOME PAGE
-# ========================
 @app.route("/")
 def index():
     return render_template("index.html", samples=SAMPLE_IMAGES)
 
 
-# ========================
-# USER IMAGE PREDICTION
-# ========================
 @app.route("/predict", methods=["POST"])
 def predict():
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
-
     f = request.files["file"]
-
     if f.filename == "":
         return jsonify({"error": "No file selected"}), 400
 
-    import uuid
-    ext = os.path.splitext(f.filename)[1].lower()
+    ext       = os.path.splitext(f.filename)[1].lower()
     safe_name = str(uuid.uuid4()) + ext
-
     file_path = os.path.join(app.config["UPLOAD_FOLDER"], safe_name)
     f.save(file_path)
 
@@ -88,29 +90,21 @@ def predict():
         return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
 
     return jsonify({
-        "label": label,
+        "label":      label,
         "confidence": confidence,
-        "image_url": url_for("static", filename="uploads/" + safe_name),
-        "filename": f.filename or safe_name
+        "image_url":  url_for("static", filename="uploads/" + safe_name),
+        "filename":   f.filename or safe_name
     })
 
 
-# ========================
-# SAMPLE IMAGE PREDICTION
-# Sample images live in static/samples/<subfolder>/<file>
-# ========================
 @app.route("/predict-sample", methods=["POST"])
 def predict_sample():
-    data = request.get_json()
-
-    # imgPath from JS is like "samples/early_blight/early1.jpg"
+    data     = request.get_json()
     img_path = data.get("img_path")
-
     if not img_path:
         return jsonify({"error": "Missing img_path"}), 400
 
-    # Sanitize — prevent path traversal
-    img_path = img_path.replace("\\", "/").lstrip("/")
+    img_path  = img_path.replace("\\", "/").lstrip("/")
     file_path = os.path.join("static", img_path)
 
     if not os.path.exists(file_path):
@@ -121,20 +115,14 @@ def predict_sample():
     except Exception as e:
         return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
 
-    filename = os.path.basename(img_path)
-    view_url = url_for("static", filename=img_path)
-
     return jsonify({
-        "label": label,
+        "label":      label,
         "confidence": confidence,
-        "filename": filename,
-        "view_url": view_url
+        "filename":   os.path.basename(img_path),
+        "view_url":   url_for("static", filename=img_path)
     })
 
 
-# ========================
-# RUN SERVER
-# ========================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=False)

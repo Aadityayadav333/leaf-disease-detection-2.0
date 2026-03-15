@@ -6,7 +6,6 @@ __pycache__/
 *.egg-info/
 dist/
 build/
-.eggs/
 
 # Virtual environments
 venv/
@@ -20,14 +19,18 @@ plant-env/
 # VS Code
 .vscode/
 
-# Model weights (too large for GitHub — host on Git LFS or Render disk)
-# ⚠ Uncomment the line below ONLY if you are NOT using Git LFS
-# plant_disease_model.keras
+# Old CNN model — replaced by TFLite
+plant_disease_model.keras
 
-# Dataset — do NOT push raw training images (large + not needed for deployment)
+# Training scripts — not needed on Render
+train_mobilenet.py
+colab_train_mobilenet.ipynb
+dataset.zip
+
+# Dataset — training images, not needed at runtime
 dataset/
 
-# Uploaded images at runtime (ephemeral on Render anyway)
+# Runtime uploads (ephemeral on Render)
 static/uploads/
 
 # OS
