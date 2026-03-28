@@ -4,6 +4,12 @@ A production-deployed deep learning web app that detects potato leaf diseases fr
 
 **Live Demo → [leaf-disease-detection-2-0.onrender.com](https://leaf-disease-detection-2-0.onrender.com)**
 
+
+
+https://github.com/user-attachments/assets/74f0d74d-58f0-44ce-87a8-4eff00c901bc
+
+
+
 ---
 
 ## What it does
